@@ -4,19 +4,16 @@ export USER="root"
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 
-# Clean dark slate background
-xsetroot -solid "#1a1b26"
+xsetroot -solid "#1e1e2e"
 
-# Start D-Bus session if available
 if which dbus-launch >/dev/null 2>&1; then
     eval $(dbus-launch --sh-syntax --exit-with-session)
 fi
 
-# Start taskbar / panel
-tint2 &
+# Pre-configure XFCE panel default layout to prevent first-start dialog
+if [ ! -d "/root/.config/xfce4" ]; then
+    mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml
+    cp -r /etc/xdg/xfce4/panel/default.xml /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
+fi
 
-# Start desktop icons & wallpaper manager
-pcmanfm --desktop &
-
-# Start window manager
-exec openbox-session
+exec startxfce4

@@ -1,0 +1,22 @@
+#!/bin/bash
+export HOME="/root"
+export USER="root"
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+
+# Clean dark slate background
+xsetroot -solid "#1a1b26"
+
+# Start D-Bus session if available
+if which dbus-launch >/dev/null 2>&1; then
+    eval $(dbus-launch --sh-syntax --exit-with-session)
+fi
+
+# Start taskbar / panel
+tint2 &
+
+# Start desktop icons & wallpaper manager
+pcmanfm --desktop &
+
+# Start window manager
+exec openbox-session

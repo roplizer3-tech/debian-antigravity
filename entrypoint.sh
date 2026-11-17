@@ -20,8 +20,8 @@ echo " Authentication: $TERMINAL_USER / (protected)"
 echo " Workspace: /workspace"
 echo "=========================================================="
 
-# Auto-start remote-control daemon
-/usr/local/bin/agy-remote-control-start > /data/agy-remote-control.log 2>&1 &
+# Auto-start remote-control service
+/usr/local/bin/agy remote-control start || true
 
 AUTH_ARGS=""
 if [ -n "$TERMINAL_USER" ] && [ -n "$TERMINAL_PASS" ]; then

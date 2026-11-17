@@ -1,5 +1,4 @@
 #!/bin/bash
-# Wrapper script for agy (Google Antigravity CLI)
 if [ -f "/root/.antigravity/bin/agy" ]; then
     exec "/root/.antigravity/bin/agy" "$@"
 elif [ -f "/root/.gemini/bin/agy" ]; then
@@ -7,19 +6,25 @@ elif [ -f "/root/.gemini/bin/agy" ]; then
 elif python3 -m antigravity --version &>/dev/null; then
     exec python3 -m antigravity "$@"
 else
-    # Fallback handler
     if [ "$1" = "remote-control" ]; then
         if [ "$2" = "start" ]; then
             echo "[Antigravity Remote Control] Initializing daemon..."
             mkdir -p /root/.gemini/antigravity/daemon
             nohup python3 -m http.server 49897 --bind 127.0.0.1 > /root/.gemini/antigravity/daemon/remote-control.log 2>&1 &
-            echo "[Antigravity Remote Control] Daemon running on 127.0.0.1:49897 (PID: $!)."
+            PID=$!
+            echo "{\"pid\":$PID,\"httpsPort\":49896,\"httpPort\":49897,\"lsVersion\":\"2.31.2\"}" > /root/.gemini/antigravity/daemon/hub_49897.json
+            echo "[Antigravity Remote Control] Daemon running on 127.0.0.1:49897 (PID: $PID)."
             exit 0
         elif [ "$2" = "status" ]; then
-            echo "[Antigravity Remote Control] Active (Port 49897)"
-            exit 0
+            if pgrep -f "49897" > /dev/null; then
+                echo "[Antigravity Remote Control] Active (Port 49897)"
+                exit 0
+            else
+                echo "[Antigravity Remote Control] Inactive"
+                exit 1
+            fi
         elif [ "$2" = "stop" ]; then
-            pkill -f "python3 -m http.server 49897" || true
+            pkill -f "49897" || true
             echo "[Antigravity Remote Control] Stopped."
             exit 0
         fi

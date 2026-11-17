@@ -1,23 +1,27 @@
 #!/bin/bash
-cat << 'EOF'
+MAGENTA="\033[1;35m"
+GREEN="\033[1;32m"
+YELLOW="\033[1;33m"
+CYAN="\033[1;36m"
+WHITE="\033[1;37m"
+RESET="\033[0m"
 
- [1;35m╔══════════════════════════════════════════════════════════════════════╗ [0m
- [1;35m║ [0m   [1;32mDebian Linux Cloud Environment (Google Antigravity AI Engine) [0m       [1;35m║ [0m
- [1;35m╠══════════════════════════════════════════════════════════════════════╣ [0m
- [1;35m║ [0m   [1;33m* OS: [0m Debian 12 (Bookworm) x86_64                                  [1;35m║ [0m
- [1;35m║ [0m   [1;33m* systemctl: [0m Enabled & ready (docker-systemctl-replacement)        [1;35m║ [0m
- [1;35m║ [0m   [1;33m* Web Terminal: [0m Running via ttyd                                   [1;35m║ [0m
- [1;35m║ [0m   [1;33m* Working Directory: [0m /workspace                                     [1;35m║ [0m
- [1;35m║ [0m   [1;33m* Persistent Data: [0m   /data                                          [1;35m║ [0m
- [1;35m╠══════════════════════════════════════════════════════════════════════╣ [0m
- [1;35m║ [0m   [1;36m[Google Antigravity CLI & Remote Control] [0m                          [1;35m║ [0m
- [1;35m║ [0m  To interact with the CLI:                                            [1;35m║ [0m
- [1;35m║ [0m       [1;37magy [0m                                                          [1;35m║ [0m
- [1;35m║ [0m  To launch the Remote Control daemon:                                 [1;35m║ [0m
- [1;35m║ [0m       [1;37magy-remote-control-start [0m                                        [1;35m║ [0m
- [1;35m║ [0m  or manage it as a systemd service:                                  [1;35m║ [0m
- [1;35m║ [0m       [1;37msystemctl start agy-remote-control [0m                              [1;35m║ [0m
- [1;35m║ [0m       [1;37msystemctl status agy-remote-control [0m                             [1;35m║ [0m
- [1;35m╚══════════════════════════════════════════════════════════════════════╝ [0m
-
-EOF
+echo -e "${MAGENTA}╔══════════════════════════════════════════════════════════════════════╗${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${GREEN}Debian Linux Cloud Environment (Google Antigravity AI Engine)${RESET}       ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}╠══════════════════════════════════════════════════════════════════════╣${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${YELLOW}* OS:${RESET} Debian 12 (Bookworm) x86_64                                  ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${YELLOW}* systemctl:${RESET} Enabled & ready (docker-systemctl-replacement)        ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${YELLOW}* Web Terminal:${RESET} Running via ttyd                                   ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${YELLOW}* Working Directory:${RESET} /workspace                                     ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${YELLOW}* Persistent Data:${RESET}   /data                                          ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}╠══════════════════════════════════════════════════════════════════════╣${RESET}"
+echo -e "${MAGENTA}║${RESET}  ${CYAN}[Google Antigravity CLI & Remote Control]${RESET}                          ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  To interact with the CLI:                                            ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}      ${WHITE}agy${RESET}                                                          ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  To launch or check Remote Control daemon:                            ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}      ${WHITE}agy-remote-control-start${RESET}                                        ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}  or manage it as a systemd service:                                  ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}      ${WHITE}systemctl start agy-remote-control${RESET}                              ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}║${RESET}      ${WHITE}systemctl status agy-remote-control${RESET}                             ${MAGENTA}║${RESET}"
+echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════════════╝${RESET}"
+echo ""

@@ -57,14 +57,16 @@ RUN curl -fsSL -o /usr/local/bin/systemctl https://raw.githubusercontent.com/gdr
     chmod 755 /usr/local/bin/systemctl && \
     ln -sf /usr/local/bin/systemctl /bin/systemctl
 
-# Setup directories
-RUN mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal /etc/skel/.vnc /etc/xdg/openbox
+# Setup directories and clean default nginx sites
+RUN rm -rf /var/www/html/* /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* && \
+    mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal /var/www/html /etc/skel/.vnc /etc/xdg/openbox
 
 COPY entrypoint.sh /entrypoint.sh
 COPY enter-debian.sh /usr/local/bin/enter-debian
 COPY welcome.sh /etc/profile.d/welcome.sh
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY portal/index.html /usr/share/portal/index.html
+COPY portal/index.html /var/www/html/index.html
 COPY xstartup /etc/skel/.vnc/xstartup
 COPY menu.xml /etc/xdg/openbox/menu.xml
 

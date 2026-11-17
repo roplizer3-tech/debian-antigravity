@@ -31,7 +31,7 @@ fi
 
 export HOME="/root"
 export TERM="xterm-256color"
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH="/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 cd /workspace
 
@@ -43,8 +43,8 @@ echo " Workspace: /workspace"
 echo " Persistent Antigravity Storage: /data"
 echo "=========================================================="
 
-# Auto-start remote-control service
-/usr/local/bin/agy remote-control start || true
+# Auto-start remote-control watchdog daemon for 24/7 continuous operation
+nohup /usr/local/bin/agy-remote-watchdog > /dev/null 2>&1 &
 
 AUTH_ARGS=""
 if [ -n "$TERMINAL_USER" ] && [ -n "$TERMINAL_PASS" ]; then

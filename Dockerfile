@@ -52,12 +52,10 @@ RUN curl -fsSL https://antigravity.google/cli/install.sh 2>/dev/null | bash || t
 RUN mkdir -p /workspace /data /etc/systemd/system /root/.gemini/antigravity-cli
 
 COPY entrypoint.sh /entrypoint.sh
-COPY agy-launcher.sh /usr/local/bin/agy
-COPY agy-remote-control-start.sh /usr/local/bin/agy-remote-control-start
+COPY agy-remote-watchdog.sh /usr/local/bin/agy-remote-watchdog
 COPY welcome.sh /etc/profile.d/welcome.sh
-COPY agy-remote-control.service /etc/systemd/system/agy-remote-control.service
 
-RUN chmod +x /entrypoint.sh /usr/local/bin/agy /usr/local/bin/agy-remote-control-start /etc/profile.d/welcome.sh
+RUN chmod +x /entrypoint.sh /usr/local/bin/agy-remote-watchdog /etc/profile.d/welcome.sh
 
 RUN echo 'source /etc/profile' >> /root/.bashrc
 

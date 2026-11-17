@@ -5,13 +5,13 @@ PORT="${PORT:-8080}"
 TERMINAL_USER="${TERMINAL_USER:-admin}"
 TERMINAL_PASS="${TERMINAL_PASS:-Antigravity2026!}"
 
-mkdir -p /workspace /data /run
+mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal
 
 echo "=========================================================="
-echo " Starting Debian Linux 12 (100% Persistent System)"
-echo " Port: $PORT"
-echo " Web Terminal Auth: $TERMINAL_USER / (protected)"
-echo " Storage Volume: /data (Persistent SSD)"
+echo " Starting Debian 12 Workstation (VNC Desktop + Web Terminal)"
+echo " Listening on Port: $PORT"
+echo " User: $TERMINAL_USER"
+echo " Storage: /data (Persistent SSD)"
 echo " Workspace: /workspace"
 echo "=========================================================="
 
@@ -51,38 +51,53 @@ fi
 EOF
     chmod +x /data/rootfs/usr/local/bin/debian-reset
 
-    # Ensure profile sourcing
     echo 'source /etc/profile' >> /data/rootfs/root/.bashrc
 
     touch /data/rootfs/.persistent_root_ready
-    echo "[PERSISTENCE] Clean Debian rootfs initialized successfully."
+    echo "[PERSISTENCE] Clean rootfs initialized successfully."
 else
-    echo "[PERSISTENCE] Existing persistent rootfs detected. All installed packages and files preserved."
+    echo "[PERSISTENCE] Existing persistent rootfs detected. All user changes preserved."
 fi
 
 # Synchronize welcome message and DNS
 cp -f /etc/profile.d/welcome.sh /data/rootfs/etc/profile.d/welcome.sh 2>/dev/null || true
 cp -L /etc/resolv.conf /data/rootfs/etc/resolv.conf 2>/dev/null || true
 
-# Test and enable native bind mounts if permitted by runtime
-rm -f /run/use_native_chroot
-if mount --bind /proc /data/rootfs/proc 2>/dev/null; then
-    mount --bind /sys /data/rootfs/sys 2>/dev/null || true
-    mount --bind /dev /data/rootfs/dev 2>/dev/null || true
-    mount --bind /dev/pts /data/rootfs/dev/pts 2>/dev/null || true
-    mount --bind /workspace /data/rootfs/workspace 2>/dev/null || true
-    mount --bind /data /data/rootfs/data 2>/dev/null || true
-    touch /run/use_native_chroot
-    echo "[PERSISTENCE] Kernel native bind-mounts active. Mode: Native chroot."
-else
-    echo "[PERSISTENCE] Mode: PRoot full-system virtualization."
-fi
+# Setup Nginx HTTP Basic Auth
+htpasswd -bc /etc/nginx/.htpasswd "$TERMINAL_USER" "$TERMINAL_PASS"
 
-AUTH_ARGS=""
-if [ -n "$TERMINAL_USER" ] && [ -n "$TERMINAL_PASS" ]; then
-    AUTH_ARGS="-c ${TERMINAL_USER}:${TERMINAL_PASS}"
-fi
+# Setup Openbox menu & VNC startup files
+mkdir -p /root/.vnc /root/.config/openbox
+mkdir -p /data/rootfs/root/.vnc /data/rootfs/root/.config/openbox
 
-cd /workspace
+cp -f /etc/xdg/openbox/menu.xml /root/.config/openbox/menu.xml 2>/dev/null || true
+cp -f /etc/xdg/openbox/menu.xml /data/rootfs/root/.config/openbox/menu.xml 2>/dev/null || true
 
-exec /usr/local/bin/ttyd $AUTH_ARGS -p "$PORT" -W -t fontSize=15 -t fontFamily="monospace" -t 'theme={"background": "#181824", "foreground": "#e0e0e0"}' /usr/local/bin/enter-debian
+# Setup VNC password
+echo "$TERMINAL_PASS" | vncpasswd -f > /root/.vnc/passwd
+chmod 600 /root/.vnc/passwd
+cp -f /root/.vnc/passwd /data/rootfs/root/.vnc/passwd 2>/dev/null || true
+
+# Setup xstartup
+cp -f /etc/skel/.vnc/xstartup /root/.vnc/xstartup 2>/dev/null || true
+chmod +x /root/.vnc/xstartup
+cp -f /root/.vnc/xstartup /data/rootfs/root/.vnc/xstartup 2>/dev/null || true
+
+# Clean stale X11 sockets/locks
+rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
+
+# 1. Start TigerVNC server on display :1 (port 5901)
+echo "[VNC] Starting TigerVNC server on :1..."
+vncserver :1 -geometry 1366x768 -depth 24 -localhost no -SecurityTypes VncAuth
+
+# 2. Start websockify (noVNC web client) on port 6080
+echo "[NOVNC] Starting websockify bridge on port 6080..."
+websockify --web /usr/share/novnc 6080 localhost:5901 > /var/log/websockify.log 2>&1 &
+
+# 3. Start ttyd web terminal on port 7681 (base path /terminal)
+echo "[TTYD] Starting web terminal on port 7681..."
+ttyd -p 7681 -b /terminal -W -t fontSize=15 -t fontFamily="monospace" -t 'theme={"background": "#181824", "foreground": "#e0e0e0"}' /usr/local/bin/enter-debian > /var/log/ttyd.log 2>&1 &
+
+# 4. Start Nginx reverse proxy on $PORT
+echo "[NGINX] Starting frontend proxy on port $PORT..."
+exec nginx -g "daemon off;"

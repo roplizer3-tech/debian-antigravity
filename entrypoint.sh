@@ -7,10 +7,26 @@ TERMINAL_PASS="${TERMINAL_PASS:-Antigravity2026!}"
 
 mkdir -p /workspace /data /root/.gemini/antigravity-cli
 
-# Automatically link persistent .gemini from /data if available
-if [ -d "/data/.gemini" ]; then
+# Unify and ensure all original paths point to persistent storage in /data
+mkdir -p /data/conversations /data/brain /data/.gemini/antigravity /data/.gemini/antigravity-cli /data/.gemini/config
+
+# Ensure /root/.gemini links to /data/.gemini
+if [ ! -L "/root/.gemini" ]; then
     rm -rf /root/.gemini
-    ln -sf /data/.gemini /root/.gemini
+    ln -sfn /data/.gemini /root/.gemini
+fi
+
+# Ensure unified conversations and brain paths
+ln -sfn /data/conversations /data/.gemini/antigravity/conversations
+ln -sfn /data/conversations /data/.gemini/antigravity-cli/conversations
+ln -sfn /data/brain /data/.gemini/antigravity/brain
+ln -sfn /data/brain /data/.gemini/antigravity-cli/brain
+
+# Ensure shell history persistence
+touch /data/.bash_history
+ln -sfn /data/.bash_history /root/.bash_history
+if ! grep -q "history -a" /root/.bashrc 2>/dev/null; then
+    echo 'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"' >> /root/.bashrc
 fi
 
 export HOME="/root"
@@ -24,7 +40,7 @@ echo " Starting Debian Linux (Google Antigravity Environment)"
 echo " Listening on Port: $PORT"
 echo " Authentication: $TERMINAL_USER / (protected)"
 echo " Workspace: /workspace"
-echo " Persistent Antigravity Data: /data/.gemini"
+echo " Persistent Antigravity Storage: /data"
 echo "=========================================================="
 
 # Auto-start remote-control service

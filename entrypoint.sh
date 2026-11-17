@@ -5,10 +5,10 @@ PORT="${PORT:-8080}"
 TERMINAL_USER="${TERMINAL_USER:-admin}"
 TERMINAL_PASS="${TERMINAL_PASS:-Antigravity2026!}"
 
-mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal
+mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal /var/www/html /root/.vnc /data/rootfs/root/.vnc
 
 echo "=========================================================="
-echo " Starting Debian 12 Workstation (VNC Desktop + Web Terminal)"
+echo " Starting Debian 12 Workstation (XFCE Desktop + Terminal)"
 echo " Listening on Port: $PORT"
 echo " User: $TERMINAL_USER"
 echo " Storage: /data (Persistent SSD)"
@@ -66,41 +66,36 @@ cp -L /etc/resolv.conf /data/rootfs/etc/resolv.conf 2>/dev/null || true
 # Setup Nginx HTTP Basic Auth
 htpasswd -bc /etc/nginx/.htpasswd "$TERMINAL_USER" "$TERMINAL_PASS"
 
-# Setup Openbox menu & VNC startup files
-mkdir -p /root/.vnc /root/.config/openbox
-mkdir -p /data/rootfs/root/.vnc /data/rootfs/root/.config/openbox
+# Setup VNC password safely and strictly
+mkdir -p /root/.vnc /data/rootfs/root/.vnc
+echo "$TERMINAL_PASS" | vncpasswd -f > /root/.vnc/passwd
+chmod 600 /root/.vnc/passwd
+cp -f /root/.vnc/passwd /data/rootfs/root/.vnc/passwd 2>/dev/null || true
 
-cp -f /etc/xdg/openbox/menu.xml /root/.config/openbox/menu.xml 2>/dev/null || true
-cp -f /etc/xdg/openbox/menu.xml /data/rootfs/root/.config/openbox/menu.xml 2>/dev/null || true
-
-# Setup VNC password safely
-VNC_SEC_ARGS="-SecurityTypes None"
-if command -v vncpasswd >/dev/null 2>&1; then
-    echo "$TERMINAL_PASS" | vncpasswd -f > /root/.vnc/passwd
-    chmod 600 /root/.vnc/passwd
-    cp -f /root/.vnc/passwd /data/rootfs/root/.vnc/passwd 2>/dev/null || true
-    VNC_SEC_ARGS="-SecurityTypes VncAuth"
-fi
-
-# Setup xstartup
+# Setup XFCE xstartup
 cp -f /etc/skel/.vnc/xstartup /root/.vnc/xstartup 2>/dev/null || true
 chmod +x /root/.vnc/xstartup
 cp -f /root/.vnc/xstartup /data/rootfs/root/.vnc/xstartup 2>/dev/null || true
 
+# Pre-configure XFCE default panel to avoid first-start prompt
+mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml /data/rootfs/root/.config/xfce4/xfconf/xfce-perchannel-xml
+cp -r /etc/xdg/xfce4/panel/default.xml /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
+cp -r /etc/xdg/xfce4/panel/default.xml /data/rootfs/root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
+
 # Clean stale X11 sockets/locks
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
 
-# 1. Start TigerVNC server on display :1 (port 5901)
-echo "[VNC] Starting TigerVNC server on :1..."
-vncserver :1 -geometry 1366x768 -depth 24 -localhost no $VNC_SEC_ARGS
+# 1. Start TigerVNC server on display :1 (port 5901) with strict VncAuth
+echo "[VNC] Starting TigerVNC server on :1 with XFCE4..."
+vncserver :1 -geometry 1366x768 -depth 24 -localhost no -SecurityTypes VncAuth
 
 # 2. Start websockify (noVNC web client) on port 6080
 echo "[NOVNC] Starting websockify bridge on port 6080..."
 websockify --web /usr/share/novnc 6080 localhost:5901 > /var/log/websockify.log 2>&1 &
 
-# 3. Start ttyd web terminal on port 7681 (base path /terminal)
-echo "[TTYD] Starting web terminal on port 7681..."
-ttyd -p 7681 -b /terminal -W -t fontSize=15 -t fontFamily="monospace" -t 'theme={"background": "#181824", "foreground": "#e0e0e0"}' /usr/local/bin/enter-debian > /var/log/ttyd.log 2>&1 &
+# 3. Start ttyd web terminal with explicit authentication on port 7681
+echo "[TTYD] Starting web terminal with password protection on port 7681..."
+ttyd -c "${TERMINAL_USER}:${TERMINAL_PASS}" -p 7681 -b /terminal -W -t fontSize=15 -t fontFamily="monospace" -t 'theme={"background": "#181824", "foreground": "#e0e0e0"}' /usr/local/bin/enter-debian > /var/log/ttyd.log 2>&1 &
 
 # 4. Start Nginx reverse proxy on $PORT
 echo "[NGINX] Starting frontend proxy on port $PORT..."

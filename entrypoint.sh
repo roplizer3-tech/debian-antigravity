@@ -73,10 +73,14 @@ mkdir -p /data/rootfs/root/.vnc /data/rootfs/root/.config/openbox
 cp -f /etc/xdg/openbox/menu.xml /root/.config/openbox/menu.xml 2>/dev/null || true
 cp -f /etc/xdg/openbox/menu.xml /data/rootfs/root/.config/openbox/menu.xml 2>/dev/null || true
 
-# Setup VNC password
-echo "$TERMINAL_PASS" | vncpasswd -f > /root/.vnc/passwd
-chmod 600 /root/.vnc/passwd
-cp -f /root/.vnc/passwd /data/rootfs/root/.vnc/passwd 2>/dev/null || true
+# Setup VNC password safely
+VNC_SEC_ARGS="-SecurityTypes None"
+if command -v vncpasswd >/dev/null 2>&1; then
+    echo "$TERMINAL_PASS" | vncpasswd -f > /root/.vnc/passwd
+    chmod 600 /root/.vnc/passwd
+    cp -f /root/.vnc/passwd /data/rootfs/root/.vnc/passwd 2>/dev/null || true
+    VNC_SEC_ARGS="-SecurityTypes VncAuth"
+fi
 
 # Setup xstartup
 cp -f /etc/skel/.vnc/xstartup /root/.vnc/xstartup 2>/dev/null || true
@@ -88,7 +92,7 @@ rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
 
 # 1. Start TigerVNC server on display :1 (port 5901)
 echo "[VNC] Starting TigerVNC server on :1..."
-vncserver :1 -geometry 1366x768 -depth 24 -localhost no -SecurityTypes VncAuth
+vncserver :1 -geometry 1366x768 -depth 24 -localhost no $VNC_SEC_ARGS
 
 # 2. Start websockify (noVNC web client) on port 6080
 echo "[NOVNC] Starting websockify bridge on port 6080..."

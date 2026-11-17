@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pcmanfm \
     xfce4-terminal \
     tigervnc-standalone-server \
+    tigervnc-tools \
     tigervnc-common \
     novnc \
     websockify \

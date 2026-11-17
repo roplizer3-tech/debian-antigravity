@@ -4,16 +4,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-# Install base tools and networking
+# Install clean base Debian packages and essential utilities
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     curl \
     wget \
     git \
-    python3 \
-    python3-pip \
-    python3-venv \
     procps \
     net-tools \
     iproute2 \
@@ -33,9 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     locales \
     libatomic1 \
+    proot \
+    rsync \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ttyd (v1.7.7 x86_64 standalone binary)
+# Install ttyd (v1.7.7 x86_64 standalone web terminal binary)
 RUN curl -fsSL -o /usr/local/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_64 && \
     chmod 755 /usr/local/bin/ttyd
 
@@ -44,18 +43,14 @@ RUN curl -fsSL -o /usr/local/bin/systemctl https://raw.githubusercontent.com/gdr
     chmod 755 /usr/local/bin/systemctl && \
     ln -sf /usr/local/bin/systemctl /bin/systemctl
 
-# Install Google Antigravity SDK & CLI
-RUN pip3 install --no-cache-dir --break-system-packages google-antigravity || true
-RUN curl -fsSL https://antigravity.google/cli/install.sh 2>/dev/null | bash || true
-
 # Setup workspace and data persistence directories
-RUN mkdir -p /workspace /data /etc/systemd/system /root/.gemini/antigravity-cli
+RUN mkdir -p /workspace /data /run
 
 COPY entrypoint.sh /entrypoint.sh
-COPY agy-remote-watchdog.sh /usr/local/bin/agy-remote-watchdog
+COPY enter-debian.sh /usr/local/bin/enter-debian
 COPY welcome.sh /etc/profile.d/welcome.sh
 
-RUN chmod +x /entrypoint.sh /usr/local/bin/agy-remote-watchdog /etc/profile.d/welcome.sh
+RUN chmod +x /entrypoint.sh /usr/local/bin/enter-debian /etc/profile.d/welcome.sh
 
 RUN echo 'source /etc/profile' >> /root/.bashrc
 

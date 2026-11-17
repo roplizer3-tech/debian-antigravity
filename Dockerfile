@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-# Install clean base Debian packages, development tools, and lightweight VNC desktop
+# Install clean base Debian packages, development tools, and full lightweight XFCE4 desktop
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
@@ -32,10 +32,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libatomic1 \
     proot \
     rsync \
-    openbox \
-    tint2 \
-    pcmanfm \
+    xfce4 \
     xfce4-terminal \
+    xfce4-taskmanager \
+    thunar \
+    mousepad \
     tigervnc-standalone-server \
     tigervnc-tools \
     tigervnc-common \
@@ -59,7 +60,7 @@ RUN curl -fsSL -o /usr/local/bin/systemctl https://raw.githubusercontent.com/gdr
 
 # Setup directories and clean default nginx sites
 RUN rm -rf /var/www/html/* /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* && \
-    mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal /var/www/html /etc/skel/.vnc /etc/xdg/openbox
+    mkdir -p /workspace /data /run /var/log/nginx /usr/share/portal /var/www/html /etc/skel/.vnc /etc/xdg/xfce4
 
 COPY entrypoint.sh /entrypoint.sh
 COPY enter-debian.sh /usr/local/bin/enter-debian
@@ -68,7 +69,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY portal/index.html /usr/share/portal/index.html
 COPY portal/index.html /var/www/html/index.html
 COPY xstartup /etc/skel/.vnc/xstartup
-COPY menu.xml /etc/xdg/openbox/menu.xml
 
 RUN chmod +x /entrypoint.sh /usr/local/bin/enter-debian /etc/profile.d/welcome.sh /etc/skel/.vnc/xstartup
 
